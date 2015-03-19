@@ -63,9 +63,18 @@
   (if-let [job (get-in st [:jobs-by-id id])
            ]
     (if (fresh? nw job)
+
+      ; Job still fresh. No change.
       st
+
+      ; Job is old. Return state with job deleted.
       (delete-job-for-id st id))
+
+    ; No such job. No change.
     st))
+
+
+; ; ; ; ; ; ; ; ; ; ; ;   Functions used by RESTfull API    ; ; ; ; ; ; ; ; ; ;
 
 
 (defn new-job
@@ -131,15 +140,20 @@
   deleted and nil is returned.
   "
   [id new-prog absolute]
-  (let [update-progress  (fn [st]
+  (let [update-progress-fn  (fn [st]
           (if (get-in st [:jobs-by-id id])
+
+            ; Job exists. Update at [:jobs-by-id id :progress] and at
+            ; [:jobs-by-id id :last-updated-ms].
             (update-in st [:jobs-by-id id] (fn [job] (-> job
               (assoc :progress (if absolute
                                  new-prog
                                  (+ (:progress job) new-prog)))
               (assoc :last-updated-ms (now)))))
+
+            ; Job missing. No change.
             st))
         ]
-    (swap! state (comp update-progress delete-job-if-old) (now) id)
+    (swap! state (comp update-progress-fn delete-job-if-old) (now) id)
     (:progress (get-in @state [:jobs-by-id id]))))
 
