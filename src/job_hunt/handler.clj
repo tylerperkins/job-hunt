@@ -49,12 +49,15 @@
 
   ; Update an existing job by id. Renders the new progress of updated job.
   (PUT "/job/:id" [id progress]
-       (if-let [[_ atsign prog-str] (re-matches #"(_?)(-?\d+)" progress)
+       (if-let [[_ underscore prog-str] (re-matches #"(_?)(-?\d+)" progress)
                 ]
+         ; Parameter progress matches a (maybe negative) integer, possibly
+         ; prefixed by "_", indicating a replacement value, not increment.
          (some-> (apply model/update-job
-                        (map edn/read-string [id prog-str atsign]))
+                        (map edn/read-string [id prog-str underscore]))
                  str)
 
+         ; Parmeter progress is neither like "123", nor "_123".
          {:status 400    ; Bad Request
           :content-type "text/plain"
           :body (str "The value for parameter \"progress\" must be a positive integer. "
