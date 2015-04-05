@@ -1,9 +1,9 @@
 # job-hunt
 
-This application is my solution to the coding exercise sent to me on 2015-03-12
-by [Kaspars Dancis](mailto:kaspars@fullcontact.com).
+This application is my solution to the coding exercise I worked on in March,
+2015.
 
-*-- [Tyler Perkins](mailto:hire@tylerperkins.com), 2015-03-16*
+*-- Tyler Perkins, 2015-03-16*
 
 ## Problem Description
 
