@@ -1,9 +1,9 @@
 # job-hunt
 
-This application is my solution to the coding exercise I worked on in March,
-2015.
+This application is my solution to a little coding exercise I did for a job
+interview in March, 2015.
 
-*-- Tyler Perkins, 2015-03-16*
+*-- Tyler Perkins*
 
 ## Problem Description
 
@@ -37,6 +37,9 @@ You will need [Leiningen][] 2.0.0 or above installed.
 To start a web server for the application, run:
 
     lein ring server
+
+A browser window should pop up, showing [http://localhost:3000/](http://localhost:3000/),
+which shows example URLs you can try.
 
 ## License
 
