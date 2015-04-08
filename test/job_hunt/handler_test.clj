@@ -1,9 +1,27 @@
+
+
+; ; ; ; ; ; ; ; ;   Replacing the "now" function, used below  ; ; ; ; ; ; ; ; ;
+
+
+(ns job-hunt.model)
+
+(defn now-its
+  "For testing, replaces the 0-arg function job-hunt.model/now with a 0-arg
+  function that always reports the given time-now-ms (a time value, in
+  milliseconds)."
+  [time-now-ms]
+  (def now (constantly time-now-ms)))
+
+
+; ; ; ; ; ; ; ; ; ; ; ; ;   Now to actual testing   ; ; ; ; ; ; ; ; ; ; ; ; ; ;
+
+
 (ns job-hunt.handler-test
   (:require [clojure.test :refer :all]
             [ring.mock.request :as mock]
             [clojure.edn :as edn]
             [job-hunt.handler :refer :all]
-            [job-hunt.model :refer [reset-state! redef-now]]
+            [job-hunt.model :as model]
             ))
 
 
@@ -37,7 +55,7 @@
 (deftest test-app
 
   (testing "registering and reading jobs"
-    (reset-state!)
+    (model/reset-state!)
 
     (is (= [] (send-and-read :get "/jobs" {})))
 
@@ -69,35 +87,35 @@
 
 (deftest test-expiring-jobs
   (testing "expiring jobs"
-    (reset-state!)
+    (model/reset-state!)
 
-    (let [i1 (do (redef-now (constantly 1000))
+    (let [i1 (do (model/now-its 1000)
                  (send-and-read :post "/job" {:total 10}))
-          i2 (do (redef-now (constantly 1001))
+          i2 (do (model/now-its 1001)
                  (send-and-read :post "/job" {:total 100}))
           ]
       (is (= 1001 (:last-updated-ms (send-and-read :get "/job/2" {}))))
 
-      (redef-now (constantly 61000))  ; One minute after i1 created.
+      (model/now-its 61000)      ; One minute after i1 created.
       (is (->> (str "/job/" i1) (mock/request :get) app :status (= 404))
           "Expired job should not be returned.")
-      (send-and-read :get (str "/job/" i2) {}) ; Tests for 200 OK.
+      (send-and-read :get (str "/job/" i2) {})  ; Tests for 200 OK.
 
-      (redef-now (constantly 61001))  ; One minute after i2 created.
+      (model/now-its 61001)      ; One minute after i2 created.
       (is (= [] (send-and-read :get "/jobs" {}))
           "All jobs should have expired and been removed."))))
 
 
 (deftest test-updating-jobs
   (testing "updating jobs"
-    (redef-now (constantly 180000))     ; Time now 3 min.
+    (model/now-its 180000)             ; Time now 3 min.
     (is (= [] (send-and-read :get "/jobs" {}))
         "All jobs should have expired and been removed.")
     (let [i1 (send-and-read :post "/job" {:total  10})
           i2 (send-and-read :post "/job" {:total 100})
           uri1 (str "/job/" i1)
           uri2 (str "/job/" i2)
-          _    (redef-now (constantly 210000))  ; Time now 3.5 min.
+          _    (model/now-its 210000)  ; Time now 3.5 min.
           abs5 (send-and-read :put uri1 {:progress "_5"})
           up2  (send-and-read :put uri1 {:progress    2})
           {t1 :total p1 :progress} (send-and-read :get uri1 {})
@@ -109,12 +127,12 @@
           "Job's progress should reflect update.")
       (is (= [t2 p2] [100 0])
           "Other jobs should remain unmodified.")
-      (redef-now (constantly 240000))   ; Time now 4 min.
+      (model/now-its 240000)           ; Time now 4 min.
       (is (->> uri1 (mock/request :get) app :status (= 200))
           "Job 1 updated, so still alive.")
       (is (->> uri2 (mock/request :get) app :status (= 404))
           "Job 2 not updated, so should have expired.")
-      (redef-now (constantly 270000))   ; Time now 4.5 min.
+      (model/now-its 270000)            ; Time now 4.5 min.
       (is (= [] (send-and-read :get "/jobs" {}))
           "All jobs should have expired and been removed."))))
 
@@ -135,5 +153,3 @@
     (let [response (app (mock/request :get "/invalid"))]
       (is (= (:status response) 404))
       (is (= (:body response) "\"Not Found.\"")))))
-
-
