@@ -32,12 +32,6 @@
   (.getTime (java.util.Date.)))
 
 
-(defn redef-now
-  "For testing, replaces function \"now\", above, with the given one."
-  [new-now-fn]
-  (def now new-now-fn))
-
-
 (defn- fresh?
   "Returns true iff the given job should not expire by the given now-time."
   [nw {ms :last-updated-ms :as job}
@@ -74,7 +68,7 @@
     st))
 
 
-; ; ; ; ; ; ; ; ; ; ; ;   Functions used by RESTfull API    ; ; ; ; ; ; ; ; ; ;
+; ; ; ; ; ; ; ; ; ; ; ;   Functions used by RESTfull API   ; ; ; ; ; ; ; ; ; ;
 
 
 (defn new-job
