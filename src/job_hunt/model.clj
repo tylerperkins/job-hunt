@@ -149,5 +149,5 @@
             st))
         ]
     (swap! state (comp update-progress-fn delete-job-if-old) (now) id)
-    (:progress (get-in @state [:jobs-by-id id]))))
+    (get-in @state [:jobs-by-id id :progress])))
 
